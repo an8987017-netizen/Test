@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>مدرسة أوائل السعيدة</title>
+<style>
+  :root{
+    --blue:#2563eb; --blue-d:#1d4ed8; --green:#16a34a; --amber:#d97706;
+    --pink:#db2777; --purple:#7c3aed; --bg:#f6f7fb; --card:#ffffff;
+    --ink:#1f2430; --muted:#6b7280; --line:#e5e7eb; --danger:#dc2626;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Tahoma','Segoe UI',sans-serif;background:var(--bg);color:var(--ink);}
+  #app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);padding-bottom:70px;position:relative;}
+  header.top{background:var(--blue);color:#fff;padding:16px;position:sticky;top:0;z-index:5;}
+  header.top h1{font-size:17px;margin:0 0 2px;}
+  header.top .sub{font-size:12px;opacity:.85;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .wrap{padding:14px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+  .btn{display:inline-block;border:none;border-radius:10px;padding:12px 16px;font-size:15px;cursor:pointer;background:var(--blue);color:#fff;width:100%;text-align:center;}
+  .btn.secondary{background:#eef2ff;color:var(--blue-d);}
+  .btn.outline{background:transparent;color:var(--blue);border:1px solid var(--blue);}
+  .btn.green{background:var(--green);}
+  .btn.amber{background:var(--amber);}
+  .btn.danger{background:var(--danger);}
+  .btn.sm{padding:8px 10px;font-size:13px;width:auto;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:15px;margin-bottom:10px;font-family:inherit;background:#fff;}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px;}
+  .muted{color:var(--muted);font-size:13px;}
+  .badge{display:inline-block;background:#eef2ff;color:var(--blue-d);border-radius:20px;padding:3px 10px;font-size:11px;}
+  .letter-tile{background:#fff;border:2px solid var(--line);border-radius:16px;padding:14px 0;text-align:center;font-size:34px;font-weight:bold;color:var(--blue-d);cursor:pointer;}
+  .letter-tile small{display:block;font-size:12px;color:var(--muted);font-weight:normal;margin-top:4px;}
+  .role-card{display:flex;align-items:center;gap:12px;padding:16px;border-radius:var(--radius);border:1px solid var(--line);background:#fff;margin-bottom:12px;cursor:pointer;}
+  .role-card .icon{font-size:30px;width:46px;text-align:center;}
+  nav.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--line);display:flex;z-index:6;}
+  nav.tabbar button{flex:1;background:none;border:none;padding:10px 2px;font-size:11px;color:var(--muted);cursor:pointer;}
+  nav.tabbar button.active{color:var(--blue);font-weight:bold;}
+  nav.tabbar .ic{font-size:19px;display:block;}
+  .fab-ai{position:fixed;bottom:78px;left:calc(50% - 220px);width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border:none;font-size:22px;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;z-index:7;}
+  .notif-dot{background:var(--danger);color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;margin-right:4px;}
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center;}
+  .modal{background:#fff;width:100%;max-width:480px;border-radius:18px 18px 0 0;max-height:88vh;overflow:auto;padding:16px;}
+  .chat-bubble{padding:10px 12px;border-radius:14px;margin-bottom:8px;max-width:82%;font-size:14px;line-height:1.5;}
+  .chat-bubble.bot{background:#eef2ff;color:var(--ink);}
+  .chat-bubble.me{background:var(--blue);color:#fff;margin-right:auto;margin-left:0;}
+  .toast{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#1f2430;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:50;}
+  a.link{color:var(--blue);cursor:pointer;text-decoration:underline;font-size:13px;}
+  .warn-box{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:10px;font-size:12px;margin-bottom:10px;}
+  .offline-bar{background:#374151;color:#fff;text-align:center;font-size:12px;padding:5px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================================
+   AWAEL AL-SAEEDA SCHOOL APP — FUNCTIONAL PROTOTYPE (single HTML/JS file)
+   -------------------------------------------------------------------------
+   This is a working, in-memory simulation of the full app logic:
+   roles, grade-gated content, teacher groups/publishing, notifications,
+   parent linking, an admin access-code gate, and a rule-based assistant.
+
+   IMPORTANT / HONEST SCOPE NOTE (read this before treating it as final):
+   - There is NO real backend here. "DB" below is a plain JS object that
+     resets on page reload. It stands in for Firestore so every screen and
+     permission rule can be built and tested end-to-end first.
+   - The admin code is not sent in plaintext (SHA-256 compared client-side),
+     but that is still NOT secure for production — a determined user can
+     read it from this file. Real deployment MUST verify it in a Cloud
+     Function / backend, never in client JS.
+   - The AI assistant is a small rule-based responder, not Gemini. Audio for
+     Quran/letters uses the browser's built-in speech synthesis (ar-SA) as a
+     functional stand-in until real recordings are attached.
+   - Nothing here is persisted offline yet (no IndexedDB/localStorage — not
+     supported in this preview sandbox). That layer is straightforward to
+     add once this is wired to real Firebase.
+   ========================================================================= */
+
+// ---------- Seed "database" ----------
+const DB = {
+  grades: [
+    {id:'kg', name:'تمهيدي / رياض الأطفال', level:'kg', order:0},
+    {id:'p1', name:'الأول الابتدائي', level:'primary', order:1},
+    {id:'p2', name:'الثاني الابتدائي', level:'primary', order:2},
+    {id:'p3', name:'الثالث الابتدائي', level:'primary', order:3},
+    {id:'p4', name:'الرابع الابتدائي', level:'primary', order:4},
+    {id:'p5', name:'الخامس الابتدائي', level:'primary', order:5},
+    {id:'p6', name:'السادس الابتدائي', level:'primary', order:6},
+    {id:'s1', name:'الأول الثانوي', level:'secondary', order:7},
+    {id:'s2', name:'الثاني الثانوي', level:'secondary', order:8},
+  ],
+  classesByGrade: { kg:['أ'], p1:['أ','ب'], p2:['أ'], p3:['أ'], p4:['أ'], p5:['أ'], p6:['أ'], s1:['أ'], s2:['أ'] },
+  subjects: [
+    {id:'quran', name:'القرآن الكريم'},
+    {id:'ar', name:'اللغة العربية'},
+    {id:'math', name:'الرياضيات'},
+    {id:'sci', name:'العلوم'},
+    {id:'eng', name:'اللغة الإنجليزية'},
+  ],
+  teachers: [
+    {id:'t1', username:'sara', password:'1234', name:'الأستاذة سارة', subjectId:'ar',
+      groups:[{gradeId:'p1', className:'أ'},{gradeId:'p2', className:'أ'}]},
+    {id:'t2', username:'ahmed', password:'1234', name:'الأستاذ أحمد', subjectId:'math',
+      groups:[{gradeId:'p1', className:'أ'},{gradeId:'s1', className:'أ'}]},
+    {id:'t3', username:'noor', password:'1234', name:'الأستاذة نور', subjectId:'quran',
+      groups:[{gradeId:'kg', className:'أ'}]},
+  ],
+  students: [], // {id,name,fatherName,gradeId,className,progress:{lettersLearned:[],mathScore:0},createdAt}
+  parents: [],  // {id,name,childId}
+  content: [],  // {id,type:'homework'|'announcement'|'lesson', gradeId, className, subjectId, teacherId, title, body, createdAt}
+  notifications: [], // {id,gradeId,className,title,body,createdAt}
+  ADMIN_CODE_HASH: '3036d7e5bacbf6e8e458120de3a0e70f8e97af02f3cea36a86b2a7131f80b7f5', // sha256("553556")
+};
+
+const ARABIC_LETTERS = [
+  {ch:'أ',name:'ألف'},{ch:'ب',name:'باء'},{ch:'ت',name:'تاء'},{ch:'ث',name:'ثاء'},
+  {ch:'ج',name:'جيم'},{ch:'ح',name:'حاء'},{ch:'خ',name:'خاء'},{ch:'د',name:'دال'},
+  {ch:'ذ',name:'ذال'},{ch:'ر',name:'راء'},{ch:'ز',name:'زاي'},{ch:'س',name:'سين'},
+  {ch:'ش',name:'شين'},{ch:'ص',name:'صاد'},{ch:'ض',name:'ضاد'},{ch:'ط',name:'طاء'},
+  {ch:'ظ',name:'ظاء'},{ch:'ع',name:'عين'},{ch:'غ',name:'غين'},{ch:'ف',name:'فاء'},
+  {ch:'ق',name:'قاف'},{ch:'ك',name:'كاف'},{ch:'ل',name:'لام'},{ch:'م',name:'ميم'},
+  {ch:'ن',name:'نون'},{ch:'ه',name:'هاء'},{ch:'و',name:'واو'},{ch:'ي',name:'ياء'},
+];
+
+const QURAN_ITEMS = [
+  {id:'q1', title:'سورة الفاتحة', text:'بسم الله الرحمن الرحيم. الحمد لله رب العالمين. الرحمن الرحيم. مالك يوم الدين.'},
+  {id:'q2', title:'سورة الإخلاص', text:'قل هو الله أحد. الله الصمد. لم يلد ولم يولد. ولم يكن له كفوا أحد.'},
+  {id:'q3', title:'سورة الناس', text:'قل أعوذ برب الناس. ملك الناس. إله الناس.'},
+];
+
+// ---------- Session state ----------
+let state = {
+  screen: 'landing',   // landing | student_register | student_home | student_subject | student_profile |
+                        // teacher_login | teacher_home | teacher_group | parent_login | parent_home |
+                        // admin_gate | admin_home
+  studentTab: 'home',
+  currentStudentId: null,
+  currentTeacherId: null,
+  currentParentId: null,
+  activeGradeFilter: null,
+  activeGroup: null,   // {gradeId,className}
+  chatOpen: false,
+  chatLog: [],
+  toast: null,
+  online: navigator.onLine,
+};
+
+window.addEventListener('online', ()=>{state.online=true; render();});
+window.addEventListener('offline', ()=>{state.online=false; render();});
+
+function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+function nowStr(){ const d=new Date(); return d.toLocaleString('ar-EG',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}); }
+function gradeName(id){ const g=DB.grades.find(g=>g.id===id); return g? g.name : id; }
+function subjectName(id){ const s=DB.subjects.find(s=>s.id===id); return s? s.name : id; }
+function showToast(msg){ state.toast = msg; render(); setTimeout(()=>{ state.toast=null; render(); }, 2200); }
+
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)){ showToast('النطق الصوتي غير مدعوم في هذا المتصفح'); return; }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ar-SA'; u.rate = 0.85;
+    window.speechSynthesis.speak(u);
+  }catch(e){ console.warn(e); }
+}
+
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ---------- Notifications helper ----------
+function pushNotification({gradeId, className, title, body}){
+  DB.notifications.unshift({ id:uid('n'), gradeId, className, title, body, createdAt:nowStr() });
+}
+function notificationsFor(gradeId, className){
+  return DB.notifications.filter(n => n.gradeId===gradeId && n.className===className);
+}
+function contentFor(gradeId, className){
+  return DB.content.filter(c => c.gradeId===gradeId && c.className===className)
+    .sort((a,b)=> (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+// =========================== RENDER ROOT ===========================
+function render(){
+  const app = document.getElementById('app');
+  let html = '';
+  if(!state.online){ html += `<div class="offline-bar">📴 لا يوجد اتصال بالإنترنت — المحتوى المحمّل مسبقًا متاح، الميزات السحابية معطّلة مؤقتًا</div>`; }
+
+  switch(state.screen){
+    case 'landing': html += screenLanding(); break;
+    case 'student_register': html += screenStudentRegister(); break;
+    case 'student_home': html += screenStudentHome(); break;
+    case 'student_subject': html += screenStudentSubject(); break;
+    case 'teacher_login': html += screenTeacherLogin(); break;
+    case 'teacher_home': html += screenTeacherHome(); break;
+    case 'teacher_group': html += screenTeacherGroup(); break;
+    case 'parent_login': html += screenParentLogin(); break;
+    case 'parent_home': html += screenParentHome(); break;
+    case 'admin_gate': html += screenAdminGate(); break;
+    case 'admin_home': html += screenAdminHome(); break;
+    default: html += screenLanding();
+  }
+
+  if(state.toast) html += `<div class="toast">${state.toast}</div>`;
+  if(state.chatOpen) html += modalAI();
+
+  app.innerHTML = html;
+  attachDynamicHandlers();
+}
+
+// =========================== LANDING ===========================
+function screenLanding(){
+  return `
+  <header class="top">
+    <h1>مدرسة أوائل السعيدة</h1>
+    <div class="sub">Awael Al-Saeeda Private School</div>
+  </header>
+  <div class="wrap">
+    <p class="muted">اختر نوع الحساب للمتابعة</p>
+    <div class="role-card" onclick="go('student_register')">
+      <div class="icon">🧒</div>
+      <div><b>طالب / طالبة</b><div class="muted">الدخول إلى بيئتي التعليمية</div></div>
+    </div>
+    <div class="role-card" onclick="go('parent_login')">
+      <div class="icon">👪</div>
+      <div><b>ولي أمر</b><div class="muted">متابعة ابني / ابنتي</div></div>
+    </div>
+    <div class="role-card" onclick="go('teacher_login')">
+      <div class="icon">🧑‍🏫</div>
+      <div><b>معلّم / معلّمة</b><div class="muted">الدخول إلى لوحة المعلم</div></div>
+    </div>
+    <div class="role-card" onclick="go('admin_gate')">
+      <div class="icon">🛡️</div>
+      <div><b>إدارة المدرسة</b><div class="muted">دخول مقيّد بصلاحيات</div></div>
+    </div>
+  </div>`;
+}
+
+// =========================== STUDENT ===========================
+function screenStudentRegister(){
+  const gradeOptions = DB.grades.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  return `
+  <header class="top row">
+    <span onclick="go('landing')" style="cursor:pointer">➜ رجوع</span>
+    <h1 style="font-size:15px">تسجيل طالب جديد</h1>
+    <span></span>
+  </header>
+  <div class="wrap">
+    <div class="card">
+      <label>اسم الطالب</label>
+      <input id="s_name" placeholder="مثال: أحمد محمد">
+      <label>اسم الأب</label>
+      <input id="s_father" placeholder="مثال: محمد علي">
+      <label>الصف الدراسي</label>
+      <select id="s_grade" onchange="onRegGradeChange()">${gradeOptions}</select>
+      <label>الفصل</label>
+      <select id="s_class"></select>
+      <button class="btn" onclick="submitStudentRegister()">دخول البيئة التعليمية</button>
+    </div>
+    <p class="muted">بعد اختيار الصف، ستظهر تلقائيًا بيئة التعلّم الخاصة بهذا الصف فقط.</p>
+    <p class="muted">لديك حساب طالب مسجّل مسبقًا؟ <a class="link" onclick="openExistingStudentPicker()">اختر من الطلاب المسجلين</a></p>
+    <div id="existing_students_box"></div>
+  </div>`;
+}
+
+function onRegGradeChange(){
+  const g = document.getElementById('s_grade').value;
+  const classSel = document.getElementById('s_class');
+  classSel.innerHTML = (DB.classesByGrade[g]||['أ']).map(c=>`<option value="${c}">فصل ${c}</option>`).join('');
+}
+
+function openExistingStudentPicker(){
+  const box = document.getElementById('existing_students_box');
+  if(DB.students.length===0){ box.innerHTML = `<p class="muted">لا يوجد طلاب مسجلون في هذه الجلسة بعد.</p>`; return; }
+  box.innerHTML = `<div class="card">` + DB.students.map(s=>`
+    <div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)">
+      <div><b>${s.name}</b> <span class="badge">${gradeName(s.gradeId)}</span></div>
+      <button class="btn sm secondary" onclick="loginAsStudent('${s.id}')">دخول</button>
+    </div>`).join('') + `</div>`;
+}
+
+function submitStudentRegister(){
+  const name = document.getElementById('s_name').value.trim();
+  const father = document.getElementById('s_father').value.trim();
+  const gradeId = document.getElementById('s_grade').value;
+  const className = document.getElementById('s_class').value || (DB.classesByGrade[gradeId]||['أ'])[0];
+  if(!name || !father){ showToast('يرجى إدخال جميع البيانات المطلوبة'); return; }
+  const student = { id:uid('st'), name, fatherName:father, gradeId, className,
+    progress:{lettersLearned:[], mathScore:0, lessonsDone:0}, createdAt:nowStr() };
+  DB.students.push(student);
+  loginAsStudent(student.id);
+}
+
+function loginAsStudent(id){
+  state.currentStudentId = id;
+  state.studentTab = 'home';
+  go('student_home');
+}
+function currentStudent(){ return DB.students.find(s=>s.id===state.currentStudentId); }
+
+function screenStudentHome(){
+  const st = currentStudent();
+  if(!st) return screenStudentRegister();
+  const grade = DB.grades.find(g=>g.id===st.gradeId);
+  const notifs = notificationsFor(st.gradeId, st.className);
+  const feed = contentFor(st.gradeId, st.className);
+
+  let body = '';
+  if(state.studentTab==='home'){
+    if(grade.level==='kg'){
+      body = `
+      <div class="grid2">
+        <div class="card" onclick="openStudentSubject('quran')" style="cursor:pointer;text-align:center">
+          <div style="font-size:30px">📖</div><b>تعلّم القرآن</b>
+        </div>
+        <div class="card" onclick="openStudentSubject('letters')" style="cursor:pointer;text-align:center">
+          <div style="font-size:30px">🔤</div><b>الحروف العربية</b>
+        </div>
+        <div class="card" onclick="openStudentSubject('mathkg')" style="cursor:pointer;text-align:center">
+          <div style="font-size:30px">🔢</div><b>الرياضيات</b>
+        </div>
+        <div class="card" onclick="openStudentSubject('feed')" style="cursor:pointer;text-align:center">
+          <div style="font-size:30px">📣</div><b>إعلانات المعلّمة</b>
+        </div>
+      </div>`;
+    } else {
+      body = `
+      <div class="grid2">
+        ${DB.subjects.map(sub=>`
+          <div class="card" onclick="openStudentSubject('${sub.id}')" style="cursor:pointer;text-align:center">
+            <div style="font-size:26px">📘</div><b>${sub.name}</b>
+          </div>`).join('')}
+        <div class="card" onclick="openStudentSubject('feed')" style="cursor:pointer;text-align:center;grid-column:1/3">
+          <div style="font-size:26px">📣</div><b>الواجبات والإعلانات</b>
+        </div>
+      </div>`;
+    }
+  } else if(state.studentTab==='notifs'){
+    body = `<h3>الإشعارات</h3>` + (notifs.length? notifs.map(n=>`
+      <div class="card"><b>${n.title}</b><p class="muted">${n.body}</p><span class="badge">${n.createdAt}</span></div>
+    `).join('') : `<p class="muted">لا توجد إشعارات جديدة لصفك الآن.</p>`);
+  } else if(state.studentTab==='profile'){
+    body = `
+    <div class="card" style="text-align:center">
+      <div style="font-size:44px">🧒</div>
+      <h2 style="margin:6px 0 0">${st.name}</h2>
+      <p class="muted">ابن السيد/ ${st.fatherName}</p>
+      <span class="badge">${grade.name} — فصل ${st.className}</span>
+    </div>
+    <div class="card">
+      <div class="row"><span>الدروس المكتملة</span><b>${st.progress.lessonsDone}</b></div>
+      <div class="row"><span>الحروف المتعلَّمة</span><b>${st.progress.lettersLearned.length} / 28</b></div>
+      <div class="row"><span>نتيجة تمارين الرياضيات</span><b>${st.progress.mathScore}</b></div>
+    </div>
+    <button class="btn outline" onclick="go('landing')">تسجيل الخروج</button>`;
+  }
+
+  return `
+  <header class="top row">
+    <div>
+      <h1 style="font-size:16px">مرحبًا ${st.name} 👋</h1>
+      <div class="sub">${grade.name} — فصل ${st.className}</div>
+    </div>
+    <div onclick="setStudentTab('notifs')" style="cursor:pointer;font-size:20px">🔔${notifs.length?`<span class="notif-dot">${notifs.length}</span>`:''}</div>
+  </header>
+  <div class="wrap">${body}</div>
+  <button class="fab-ai" onclick="toggleChat(true)">🤖</button>
+  ${tabbarStudent()}`;
+}
+
+function tabbarStudent(){
+  const tabs = [['home','🏠','الرئيسية'],['notifs','🔔','الإشعارات'],['profile','👤','ملفي']];
+  return `<nav class="tabbar">${tabs.map(t=>`
+    <button class="${state.studentTab===t[0]?'active':''}" onclick="setStudentTab('${t[0]}')">
+      <span class="ic">${t[1]}</span>${t[2]}
+    </button>`).join('')}</nav>`;
+}
+function setStudentTab(tab){ state.studentTab = tab; render(); }
+
+function openStudentSubject(key){
+  state.activeGradeFilter = key;
+  go('student_subject');
+}
+
+function screenStudentSubject(){
+  const st = currentStudent();
+  const key = state.activeGradeFilter;
+  let inner = '';
+  let title = '';
+
+  if(key==='letters'){
+    title = 'الحروف العربية';
+    inner = `<p class="muted">اضغط على أي حرف لسماع نطقه.</p><div class="grid3">` +
+      ARABIC_LETTERS.map(l=>`
+        <div class="letter-tile" onclick="learnLetter('${l.ch}','${l.name}')">${l.ch}<small>${l.name}</small></div>
+      `).join('') + `</div>`;
+  } else if(key==='quran'){
+    title = 'تعلّم القرآن الكريم';
+    inner = `<div class="warn-box">تلاوة تجريبية بالنطق الآلي لحين إضافة تسجيلات صوتية حقيقية.</div>` +
+      QURAN_ITEMS.map(q=>`
+        <div class="card">
+          <b>${q.title}</b>
+          <div class="grid3" style="margin-top:8px">
+            <button class="btn sm secondary" onclick="speak('${q.text.replace(/'/g,"\\'")}')">▶️ تشغيل</button>
+            <button class="btn sm secondary" onclick="window.speechSynthesis && window.speechSynthesis.cancel()">⏸️ إيقاف</button>
+            <button class="btn sm green" onclick="markLessonDone()">✅ تم الحفظ</button>
+          </div>
+        </div>`).join('');
+  } else if(key==='mathkg'){
+    title = 'رياضيات رياض الأطفال';
+    inner = mathKgWidget();
+  } else if(key==='feed'){
+    title = 'الواجبات والإعلانات';
+    const feed = contentFor(st.gradeId, st.className);
+    inner = feed.length ? feed.map(c=>`
+      <div class="card">
+        <span class="badge">${c.type==='homework'?'واجب':'إعلان'} · ${subjectName(c.subjectId)}</span>
+        <h3 style="margin:6px 0 2px">${c.title}</h3>
+        <p class="muted">${c.body}</p>
+        <span class="muted" style="font-size:11px">${c.createdAt}</span>
+      </div>`).join('') : `<p class="muted">لا يوجد محتوى منشور لصفك بعد.</p>`;
+  } else {
+    // regular subject id
+    title = subjectName(key);
+    const feed = contentFor(st.gradeId, st.className).filter(c=>c.subjectId===key);
+    inner = `
+      <div class="card"><b>دروس ${title}</b><p class="muted">محتوى الدروس يُنشر من قِبل معلّم المادة ويظهر هنا تلقائيًا فور نشره.</p></div>
+      ${feed.length? feed.map(c=>`
+        <div class="card">
+          <span class="badge">${c.type==='homework'?'واجب':'مادة تعليمية'}</span>
+          <h3 style="margin:6px 0 2px">${c.title}</h3><p class="muted">${c.body}</p>
+        </div>`).join('') : `<p class="muted">لم يُنشر معلّم ${title} أي محتوى بعد.</p>`}
+      <button class="btn secondary" onclick="markLessonDone()">وسم كدرس مكتمل ✅</button>`;
+  }
+
+  return `
+  <header class="top row">
+    <span onclick="go('student_home')" style="cursor:pointer">➜ رجوع</span>
+    <h1 style="font-size:15px">${title}</h1><span></span>
+  </header>
+  <div class="wrap">${inner}</div>
+  <button class="fab-ai" onclick="toggleChat(true)">🤖</button>`;
+}
+
+function learnLetter(ch,name){
+  speak(name);
+  const st = currentStudent();
+  if(st && !st.progress.lettersLearned.includes(ch)) st.progress.lettersLearned.push(ch);
+}
+function markLessonDone(){
+  const st = currentStudent();
+  if(st) st.progress.lessonsDone += 1;
+  showToast('أحسنت! تم تسجيل التقدّم 🎉');
+}
+
+function mathKgWidget(){
+  const a = Math.floor(Math.random()*5)+1, b = Math.floor(Math.random()*5)+1;
+  window._mathAnswer = a+b;
+  return `
+  <div class="card">
+    <b>العد والأرقام</b>
+    <div class="grid3" style="margin-top:10px">
+      ${[1,2,3,4,5,6,7,8,9,10].slice(0,9).map(n=>`<button class="btn sm secondary" onclick="speak('${n}')">${n}</button>`).join('')}
+    </div>
+  </div>
+  <div class="card">
+    <b>تمرين جمع بسيط</b>
+    <p style="font-size:22px;text-align:center">${a} + ${b} = ؟</p>
+    <input id="math_ans" type="number" placeholder="اكتب الناتج هنا">
+    <button class="btn" onclick="checkMathAnswer()">تحقق ✅</button>
+  </div>`;
+}
+function checkMathAnswer(){
+  const val = Number(document.getElementById('math_ans').value);
+  const st = currentStudent();
+  if(val === window._mathAnswer){
+    if(st) st.progress.mathScore += 10;
+    showToast('إجابة صحيحة! 🌟');
+  } else {
+    showToast('حاول مرة أخرى 💪');
+  }
+  go('student_subject');
+}
+
+// =========================== TEACHER ===========================
+function screenTeacherLogin(){
+  return `
+  <header class="top row"><span onclick="go('landing')" style="cursor:pointer">➜ رجوع</span><h1 style="font-size:15px">دخول المعلّم</h1><span></span></header>
+  <div class="wrap">
+    <div class="card">
+      <label>اسم المستخدم</label><input id="t_user" placeholder="مثال: sara">
+      <label>كلمة المرور</label><input id="t_pass" type="password" placeholder="••••">
+      <button class="btn" onclick="teacherLogin()">دخول</button>
+      <p class="muted" style="margin-top:8px">للتجربة: sara / ahmed / noor — كلمة المرور 1234</p>
+    </div>
+  </div>`;
+}
+function teacherLogin(){
+  const u = document.getElementById('t_user').value.trim();
+  const p = document.getElementById('t_pass').value.trim();
+  const t = DB.teachers.find(t=>t.username===u && t.password===p);
+  if(!t){ showToast('بيانات الدخول غير صحيحة'); return; }
+  state.currentTeacherId = t.id;
+  go('teacher_home');
+}
+function currentTeacher(){ return DB.teachers.find(t=>t.id===state.currentTeacherId); }
+
+function screenTeacherHome(){
+  const t = currentTeacher();
+  if(!t) return screenTeacherLogin();
+  return `
+  <header class="top">
+    <h1 style="font-size:16px">مرحبًا، ${t.name} 👋</h1>
+    <div class="sub">${subjectName(t.subjectId)}</div>
+  </header>
+  <div class="wrap">
+    <p class="muted">مجموعاتك الدراسية</p>
+    ${t.groups.map(g=>`
+      <div class="card row" style="cursor:pointer" onclick='openTeacherGroup(${JSON.stringify(g)})'>
+        <div><b>${gradeName(g.gradeId)}</b><div class="muted">فصل ${g.className}</div></div>
+        <span class="badge">${(DB.students.filter(s=>s.gradeId===g.gradeId && s.className===g.className)).length} طالب</span>
+      </div>`).join('')}
+    <button class="btn outline" onclick="go('landing')">تسجيل الخروج</button>
+  </div>`;
+}
+
+function openTeacherGroup(g){ state.activeGroup = g; go('teacher_group'); }
+
+function screenTeacherGroup(){
+  const t = currentTeacher();
+  const g = state.activeGroup;
+  const students = DB.students.filter(s=>s.gradeId===g.gradeId && s.className===g.className);
+  const feed = contentFor(g.gradeId, g.className).filter(c=>c.teacherId===t.id);
+
+  return `
+  <header class="top row">
+    <span onclick="go('teacher_home')" style="cursor:pointer">➜ رجوع</span>
+    <h1 style="font-size:15px">${gradeName(g.gradeId)} — فصل ${g.className}</h1><span></span>
+  </header>
+  <div class="wrap">
+    <div class="card">
+      <b>نشر محتوى جديد</b>
+      <select id="pub_type"><option value="homework">واجب</option><option value="announcement">إعلان</option><option value="lesson">درس</option></select>
+      <input id="pub_title" placeholder="العنوان">
+      <textarea id="pub_body" rows="3" placeholder="التفاصيل"></textarea>
+      <button class="btn green" onclick="publishContent()">نشر وإرسال إشعار للطلاب 📣</button>
+    </div>
+    <div class="card">
+      <b>طلاب المجموعة (${students.length})</b>
+      ${students.map(s=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${s.name}</span><span class="muted">${s.progress.lessonsDone} دروس مكتملة</span></div>`).join('') || '<p class="muted">لا يوجد طلاب مسجّلون في هذا الفصل بعد.</p>'}
+    </div>
+    <div class="card">
+      <b>سجل المنشورات</b>
+      ${feed.length? feed.map(c=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${c.title}</b><div class="muted">${c.body}</div><span class="muted" style="font-size:11px">${c.createdAt}</span></div>`).join('') : '<p class="muted">لم تنشر شيئًا بعد.</p>'}
+    </div>
+  </div>`;
+}
+
+function publishContent(){
+  const t = currentTeacher();
+  const g = state.activeGroup;
+  const type = document.getElementById('pub_type').value;
+  const title = document.getElementById('pub_title').value.trim();
+  const body = document.getElementById('pub_body').value.trim();
+  if(!title || !body){ showToast('يرجى تعبئة العنوان والتفاصيل'); return; }
+  DB.content.unshift({ id:uid('c'), type, gradeId:g.gradeId, className:g.className,
+    subjectId:t.subjectId, teacherId:t.id, title, body, createdAt:nowStr() });
+  pushNotification({ gradeId:g.gradeId, className:g.className,
+    title: type==='homework' ? 'واجب جديد' : (type==='announcement' ? 'إعلان جديد' : 'درس جديد'),
+    body: `${title} — من ${t.name}` });
+  showToast('تم النشر وإرسال الإشعار لطلاب الفصل ✅');
+  render();
+}
+
+// =========================== PARENT ===========================
+function screenParentLogin(){
+  return `
+  <header class="top row"><span onclick="go('landing')" style="cursor:pointer">➜ رجوع</span><h1 style="font-size:15px">دخول ولي الأمر</h1><span></span></header>
+  <div class="wrap">
+    <div class="card">
+      <label>اسمك (ولي الأمر)</label><input id="p_name" placeholder="مثال: محمد علي">
+      <label>معرّف الطالب (Student ID) المرتبط</label>
+      <select id="p_child">${DB.students.map(s=>`<option value="${s.id}">${s.name} — ${gradeName(s.gradeId)}</option>`).join('') || '<option disabled>لا يوجد طلاب مسجلون بعد</option>'}</select>
+      <button class="btn" onclick="parentLogin()">ربط ومتابعة</button>
+      <p class="muted" style="margin-top:8px">يتم الربط عادة عبر رقم/رمز يصدره المدرسة لكل طالب — هنا نستخدم قائمة الطلاب المسجّلين في هذه الجلسة للتجربة.</p>
+    </div>
+  </div>`;
+}
+function parentLogin(){
+  const name = document.getElementById('p_name').value.trim();
+  const childSel = document.getElementById('p_child');
+  if(!name || !childSel.value){ showToast('يرجى إدخال الاسم واختيار الطالب'); return; }
+  const parent = { id:uid('pa'), name, childId:childSel.value };
+  DB.parents.push(parent);
+  state.currentParentId = parent.id;
+  go('parent_home');
+}
+function screenParentHome(){
+  const parent = DB.parents.find(p=>p.id===state.currentParentId);
+  if(!parent) return screenParentLogin();
+  const child = DB.students.find(s=>s.id===parent.childId);
+  const notifs = notificationsFor(child.gradeId, child.className);
+  const feed = contentFor(child.gradeId, child.className);
+  return `
+  <header class="top"><h1 style="font-size:16px">مرحبًا، ولي أمر ${child.name} 👋</h1></header>
+  <div class="wrap">
+    <div class="card">
+      <b>${child.name}</b> — ${gradeName(child.gradeId)} / فصل ${child.className}
+      <div class="row" style="margin-top:6px"><span>الدروس المكتملة</span><b>${child.progress.lessonsDone}</b></div>
+      <div class="row"><span>الحروف المتعلَّمة</span><b>${child.progress.lettersLearned.length}/28</b></div>
+    </div>
+    <div class="card"><b>آخر الإشعارات</b>
+      ${notifs.slice(0,5).map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${n.title}</b><div class="muted">${n.body}</div></div>`).join('') || '<p class="muted">لا إشعارات حاليًا.</p>'}
+    </div>
+    <div class="card"><b>الواجبات والدروس</b>
+      ${feed.slice(0,5).map(c=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${c.title}</b><div class="muted">${c.body}</div></div>`).join('') || '<p class="muted">لا يوجد محتوى بعد.</p>'}
+    </div>
+    <button class="btn outline" onclick="go('landing')">تسجيل الخروج</button>
+  </div>`;
+}
+
+// =========================== ADMIN ===========================
+function screenAdminGate(){
+  return `
+  <header class="top row"><span onclick="go('landing')" style="cursor:pointer">➜ رجوع</span><h1 style="font-size:15px">دخول الإدارة</h1><span></span></header>
+  <div class="wrap">
+    <div class="card">
+      <label>أدخل رمز دخول الإدارة</label>
+      <input id="admin_code" type="password" placeholder="••••••">
+      <button class="btn" onclick="adminCheckCode()">دخول</button>
+      <p class="warn-box" style="margin-top:10px">للعرض التجريبي فقط: يتم مقارنة الرمز محليًا عبر بصمة SHA-256، وهذا غير كافٍ للإنتاج — في النسخة النهائية يجب التحقق من الرمز عبر دالة خادم (Cloud Function) وليس داخل تطبيق العميل.</p>
+    </div>
+  </div>`;
+}
+async function adminCheckCode(){
+  const code = document.getElementById('admin_code').value.trim();
+  const hash = await sha256Hex(code);
+  if(hash === DB.ADMIN_CODE_HASH){ go('admin_home'); }
+  else{ showToast('رمز الدخول غير صحيح'); }
+}
+
+function screenAdminHome(){
+  return `
+  <header class="top"><h1 style="font-size:16px">لوحة إدارة المدرسة</h1></header>
+  <div class="wrap">
+    <div class="grid2">
+      <div class="card" style="text-align:center"><div style="font-size:22px">${DB.students.length}</div><span class="muted">طالب</span></div>
+      <div class="card" style="text-align:center"><div style="font-size:22px">${DB.teachers.length}</div><span class="muted">معلّم</span></div>
+      <div class="card" style="text-align:center"><div style="font-size:22px">${DB.parents.length}</div><span class="muted">ولي أمر</span></div>
+      <div class="card" style="text-align:center"><div style="font-size:22px">${DB.content.length}</div><span class="muted">منشور</span></div>
+    </div>
+
+    <div class="card">
+      <b>الطلاب المسجّلون</b>
+      ${DB.students.map(s=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${s.name}</span><span class="badge">${gradeName(s.gradeId)} / ${s.className}</span></div>`).join('') || '<p class="muted">لا يوجد طلاب بعد.</p>'}
+    </div>
+
+    <div class="card">
+      <b>إضافة معلّم جديد</b>
+      <input id="nt_name" placeholder="اسم المعلّم">
+      <input id="nt_user" placeholder="اسم المستخدم">
+      <input id="nt_pass" placeholder="كلمة مرور مؤقتة">
+      <select id="nt_subject">${DB.subjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>
+      <select id="nt_grade">${DB.grades.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}</select>
+      <select id="nt_class">${(DB.classesByGrade['kg']||['أ']).map(c=>`<option value="${c}">فصل ${c}</option>`).join('')}</select>
+      <button class="btn green" onclick="adminAddTeacher()">إضافة المعلّم وربطه بالمجموعة</button>
+    </div>
+
+    <div class="card">
+      <b>المعلّمون ومجموعاتهم</b>
+      ${DB.teachers.map(t=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${t.name}</b> — ${subjectName(t.subjectId)}
+        <div class="muted">${t.groups.map(g=>gradeName(g.gradeId)+' / '+g.className).join('، ')}</div></div>`).join('')}
+    </div>
+
+    <div class="card">
+      <b>كل الإشعارات المرسلة</b>
+      ${DB.notifications.slice(0,8).map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${n.title}</b><div class="muted">${n.body} — ${gradeName(n.gradeId)}/${n.className}</div></div>`).join('') || '<p class="muted">لا إشعارات بعد.</p>'}
+    </div>
+
+    <button class="btn outline" onclick="go('landing')">خروج من لوحة الإدارة</button>
+  </div>`;
+}
+function adminAddTeacher(){
+  const name = document.getElementById('nt_name').value.trim();
+  const username = document.getElementById('nt_user').value.trim();
+  const password = document.getElementById('nt_pass').value.trim();
+  const subjectId = document.getElementById('nt_subject').value;
+  const gradeId = document.getElementById('nt_grade').value;
+  const className = document.getElementById('nt_class').value;
+  if(!name||!username||!password){ showToast('يرجى تعبئة كل الحقول'); return; }
+  DB.teachers.push({ id:uid('t'), username, password, name, subjectId, groups:[{gradeId,className}] });
+  showToast('تم إضافة المعلّم بنجاح ✅');
+  render();
+}
+
+// =========================== AI ASSISTANT (rule-based demo) ===========================
+function toggleChat(open){
+  state.chatOpen = open;
+  if(open && state.chatLog.length===0){
+    state.chatLog.push({from:'bot', text:'أهلاً بك! أنا مساعدك التعليمي. اسألني عن أي درس وسأحاول مساعدتك 🙂'});
+  }
+  render();
+}
+function modalAI(){
+  return `
+  <div class="modal-back" onclick="if(event.target===this) toggleChat(false)">
+    <div class="modal">
+      <div class="row"><b>🤖 المساعد التعليمي</b><span onclick="toggleChat(false)" style="cursor:pointer">✕</span></div>
+      <div class="warn-box">نسخة تجريبية بردود مبرمجة مسبقًا — سيتم ربطها بـ Gemini عبر خادم آمن لاحقًا.</div>
+      <div id="chat_box" style="max-height:40vh;overflow:auto;margin:8px 0">
+        ${state.chatLog.map(m=>`<div class="chat-bubble ${m.from==='me'?'me':'bot'}">${m.text}</div>`).join('')}
+      </div>
+      <div class="row">
+        <input id="chat_input" placeholder="اكتب سؤالك هنا..." onkeydown="if(event.key==='Enter') sendChat()">
+        <button class="btn sm" style="width:70px" onclick="sendChat()">إرسال</button>
+      </div>
+    </div>
+  </div>`;
+}
+function sendChat(){
+  const inp = document.getElementById('chat_input');
+  const text = inp.value.trim();
+  if(!text) return;
+  state.chatLog.push({from:'me', text});
+  const st = currentStudent();
+  const gradeLevel = st ? (DB.grades.find(g=>g.id===st.gradeId)||{}).level : null;
+  state.chatLog.push({from:'bot', text: aiReply(text, gradeLevel)});
+  render();
+  setTimeout(()=>{ const box=document.getElementById('chat_box'); if(box) box.scrollTop = box.scrollHeight; },0);
+}
+function aiReply(text, gradeLevel){
+  const t = text.toLowerCase();
+  if(t.includes('حرف') || t.includes('ألف') || t.includes('أبجدية')) return 'رائع! جرّب فتح قسم "الحروف العربية" واضغط على أي حرف لسماع نطقه، ثم كرّره بصوت عالٍ.';
+  if(t.includes('جمع') || t.includes('رياضيات') || t.includes('طرح') || t.includes('حساب')) return gradeLevel==='kg' ? 'لنبدأ بسيطًا: إذا كان لديك 2 تفاحة وأعطاك صديقك 3، كم أصبح لديك؟ جرّب تمرين الجمع في قسم الرياضيات!' : 'أخبرني برقم المسألة أو اكتبها لي وسأشرح لك خطوة بخطوة.';
+  if(t.includes('قرآن') || t.includes('سورة') || t.includes('تلاوة')) return 'افتح قسم "تعلّم القرآن" واستخدم زر التشغيل للاستماع، ثم زر "تم الحفظ" بعد أن تُتقن الآيات.';
+  if(t.includes('واجب')) return 'يمكنك رؤية كل واجباتك الجديدة في تبويب "الإشعارات" أو داخل صفحة كل مادة.';
+  if(t.includes('مرحبا') || t.includes('السلام')) return 'وعليكم السلام ورحمة الله 🌟 كيف يمكنني مساعدتك في دراستك اليوم؟';
+  return 'سؤال جميل! في النسخة الكاملة سأتمكّن من شرح أي درس بالتفصيل حسب صفك الدراسي. جرّب أن تسألني عن الحروف أو الرياضيات أو القرآن الآن.';
+}
+
+// ---------- navigation & bootstrap ----------
+function go(screen){ state.screen = screen; render(); }
+function attachDynamicHandlers(){ /* reserved for future non-inline listeners */ }
+
+render();
+</script>
+</body>
+</html>
